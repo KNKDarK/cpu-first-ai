@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable
 
+import cv2
+import numpy as np
 import pytesseract  # type: ignore
 from PIL import Image, ImageEnhance, ImageOps
 
@@ -50,11 +52,22 @@ def _get_mean_confidence(image: Image.Image, psm: int = 6) -> float:
     return sum(confidences) / len(confidences) if confidences else 0.0
 
 
+def _prepare_image_cv2(image: Image.Image, scale: int = 3) -> Image.Image:
+    arr = np.array(image.convert("RGB"))
+    gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    h, w = binary.shape
+    enlarged = cv2.resize(binary, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+    return Image.fromarray(enlarged)
+
+
 def _image_variants(image: Image.Image) -> Iterable[tuple[str, Image.Image, int]]:
     gray = ImageOps.autocontrast(image.convert("L"))
     contrast = ImageEnhance.Contrast(gray).enhance(2)
 
     yield "default", _prepare_image(image), 6
+    yield "cv2_otsu", _prepare_image_cv2(image), 6
     yield "receipt_lines", contrast.resize((gray.width * 2, gray.height * 2)).point(
         lambda pixel: 255 if pixel > 165 else 0
     ), 4
@@ -193,6 +206,9 @@ def _clean_text(raw: str) -> str:
 def process_image(image_path: str) -> str:
     _check_tesseract()
     source_image = Image.open(image_path)
+
+    debug_processed = _prepare_image_cv2(source_image, scale=3)
+    debug_processed.save("debug_processed.jpg")
 
     raw_text, confidence = _extract_best_text(source_image)
     if confidence < CONFIDENCE_THRESHOLD:
