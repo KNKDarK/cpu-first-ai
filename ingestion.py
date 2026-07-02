@@ -10,7 +10,7 @@ from PIL import Image, ImageEnhance, ImageOps
 
 OUTPUT_FILE: str = "/tmp/input.txt"
 RAW_OUTPUT_FILE: str = "/tmp/input_raw.txt"
-CONFIDENCE_THRESHOLD: int = 40
+CONFIDENCE_THRESHOLD: int = 20
 
 
 @dataclass(frozen=True)

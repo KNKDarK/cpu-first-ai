@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from llama_cpp import Llama
-from pydantic import BaseModel
+from dataclasses import dataclass, asdict
 from huggingface_hub import hf_hub_download
 
 
@@ -41,7 +41,8 @@ You must return a JSON object with the key "cleaned_text" containing the cleaned
 """.strip()
 
 
-class CleanedText(BaseModel):
+@dataclass
+class CleanedText:
     cleaned_text: str
 
 
@@ -78,7 +79,7 @@ def main() -> None:
         )
         content = response["choices"][0]["message"]["content"].strip()
         data = json.loads(content)
-        validated = CleanedText.model_validate(data)
+        validated = CleanedText(**data)
     except Exception:
         write_error()
         return
@@ -86,7 +87,7 @@ def main() -> None:
         LOCK_FILE.unlink(missing_ok=True)
 
     OUTPUT_FILE.write_text(
-        validated.model_dump_json(),
+        json.dumps(asdict(validated)),
         encoding="utf-8",
     )
 
