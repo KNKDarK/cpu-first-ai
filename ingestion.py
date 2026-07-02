@@ -4,10 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable
 
-import cv2
 import numpy as np
 import pytesseract  # type: ignore
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 
 OUTPUT_FILE: str = "/tmp/input.txt"
@@ -52,13 +51,41 @@ def _get_mean_confidence(image: Image.Image, psm: int = 6) -> float:
     return sum(confidences) / len(confidences) if confidences else 0.0
 
 
+def _otsu_threshold(arr: np.ndarray) -> int:
+    hist, _ = np.histogram(arr, bins=256, range=(0, 256))
+    total = arr.size
+    sum_total = np.dot(hist, np.arange(256))
+    sum_bg = 0
+    w_bg = 0
+    w_fg = 0
+    best_thresh = 0
+    best_var = 0.0
+    for t in range(256):
+        w_bg += hist[t]
+        if w_bg == 0:
+            continue
+        w_fg = total - w_bg
+        if w_fg == 0:
+            break
+        sum_bg += t * hist[t]
+        mean_bg = sum_bg / w_bg
+        mean_fg = (sum_total - sum_bg) / w_fg
+        between_var = w_bg * w_fg * (mean_bg - mean_fg) ** 2
+        if between_var > best_var:
+            best_var = between_var
+            best_thresh = t
+    return best_thresh
+
+
 def _prepare_image_cv2(image: Image.Image, scale: int = 3) -> Image.Image:
-    arr = np.array(image.convert("RGB"))
-    gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
-    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-    _, binary = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    arr = np.array(image.convert("L"))
+    blurred = np.array(Image.fromarray(arr).filter(ImageFilter.BoxBlur(1)))
+    thresh = _otsu_threshold(blurred)
+    binary = np.where(blurred > thresh, 255, 0).astype(np.uint8)
     h, w = binary.shape
-    enlarged = cv2.resize(binary, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+    enlarged = np.array(
+        Image.fromarray(binary).resize((w * scale, h * scale), Image.LANCZOS)
+    )
     return Image.fromarray(enlarged)
 
 
@@ -208,7 +235,7 @@ def process_image(image_path: str) -> str:
     source_image = Image.open(image_path)
 
     debug_processed = _prepare_image_cv2(source_image, scale=3)
-    debug_processed.save("debug_processed.jpg")
+    debug_processed.save("/tmp/debug_processed.jpg")
 
     raw_text, confidence = _extract_best_text(source_image)
     if confidence < CONFIDENCE_THRESHOLD:

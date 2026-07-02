@@ -1,5 +1,4 @@
 pillow
-opencv-python
 pydantic
 pytesseract
 llama-cpp-python
