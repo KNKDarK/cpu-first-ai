@@ -11,7 +11,7 @@ from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
 OUTPUT_FILE: str = "/tmp/input.txt"
 RAW_OUTPUT_FILE: str = "/tmp/input_raw.txt"
-CONFIDENCE_THRESHOLD: int = 20
+CONFIDENCE_THRESHOLD: int = 10
 
 
 @dataclass(frozen=True)
@@ -89,6 +89,21 @@ def _prepare_image_cv2(image: Image.Image, scale: int = 3) -> Image.Image:
     return Image.fromarray(enlarged)
 
 
+def _is_dark_image(image: Image.Image) -> bool:
+    """Return True if image has a predominantly dark background (e.g. dark-mode UI screenshots)."""
+    arr = np.array(image.convert("L"))
+    return float(np.mean(arr)) < 128
+
+
+def _prepare_dark_ui(image: Image.Image, scale: int = 3) -> Image.Image:
+    """Invert dark-background images so text becomes dark-on-white for Tesseract."""
+    gray = image.convert("L")
+    inverted = ImageOps.invert(gray)
+    enhanced = ImageEnhance.Contrast(inverted).enhance(2)
+    resized = enhanced.resize((enhanced.width * scale, enhanced.height * scale), Image.LANCZOS)
+    return resized.point(lambda pixel: 255 if pixel > 140 else 0)
+
+
 def _image_variants(image: Image.Image) -> Iterable[tuple[str, Image.Image, int]]:
     gray = ImageOps.autocontrast(image.convert("L"))
     contrast = ImageEnhance.Contrast(gray).enhance(2)
@@ -104,6 +119,10 @@ def _image_variants(image: Image.Image) -> Iterable[tuple[str, Image.Image, int]
     ), 6
     yield "auto_segment", contrast.resize((gray.width * 3, gray.height * 3)), 3
     yield "sparse_text", contrast.resize((gray.width * 3, gray.height * 3)), 11
+    # Dark-mode UI screenshot variant: invert so white text becomes black on white
+    if _is_dark_image(image):
+        yield "dark_ui_inverted", _prepare_dark_ui(image, scale=2), 6
+        yield "dark_ui_inverted_psm3", _prepare_dark_ui(image, scale=2), 3
 
 
 def _text_score(text: str, confidence: float) -> float:
@@ -138,6 +157,10 @@ def _text_score(text: str, confidence: float) -> float:
     )
 
 
+def _count_words(text: str) -> int:
+    return len(re.findall(r"[A-Za-z0-9]+", text))
+
+
 def _extract_best_text(image: Image.Image) -> tuple[str, float]:
     candidates: list[OcrCandidate] = []
     for _, variant, psm in _image_variants(image):
@@ -152,6 +175,13 @@ def _extract_best_text(image: Image.Image) -> tuple[str, float]:
         )
 
     best = max(candidates, key=lambda candidate: candidate.score)
+
+    # Fallback: if best has no usable text, pick the candidate with the most words
+    if _count_words(best.text) < 3:
+        word_rich = max(candidates, key=lambda c: _count_words(c.text))
+        if _count_words(word_rich.text) >= 3:
+            return word_rich.text, word_rich.confidence
+
     return best.text, best.confidence
 
 
