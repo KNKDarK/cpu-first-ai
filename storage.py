@@ -3,9 +3,8 @@ import sqlite3
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from dataclasses import dataclass
 from typing import Any
-
-from pydantic import BaseModel
 
 
 OUTPUT_FILE = Path("/tmp/output.json")
@@ -13,11 +12,13 @@ LOCK_FILE = Path("/tmp/output.json.lock")
 DB_FILE = Path("/tmp/ocr_extractions.sqlite3")
 
 
-class CleanedText(BaseModel):
+@dataclass
+class CleanedText:
     cleaned_text: str
 
 
-class ExtractionRecord(BaseModel):
+@dataclass
+class ExtractionRecord:
     id: int
     created_at: str
     source_image: str | None
@@ -49,7 +50,7 @@ def load_validated_output(output_path: Path = OUTPUT_FILE) -> CleanedText | None
     data: dict[str, Any] = json.loads(output_path.read_text(encoding="utf-8"))
     if data.get("status") == "error":
         return None
-    return CleanedText.model_validate(data)
+    return CleanedText(**data)
 
 
 def persist_output(
@@ -102,7 +103,7 @@ def fetch_recent(limit: int = 10, db_path: Path = DB_FILE) -> list[ExtractionRec
             """,
             (limit,),
         ).fetchall()
-    return [ExtractionRecord.model_validate(dict(row)) for row in rows]
+    return [ExtractionRecord(**dict(row)) for row in rows]
 
 
 def watch_and_persist(
