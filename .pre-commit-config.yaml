@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: python-compile
+        name: Python syntax check
+        entry: python scripts/ci/compile_python.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
+      - id: forbid-cloud-clients
+        name: Block forbidden cloud client libraries
+        entry: python scripts/ci/forbid_cloud_clients.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
+      - id: storage-contract
+        name: Storage JSON/Pydantic contract
+        entry: python scripts/ci/test_storage_contract.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
+      - id: ocr-smoke
+        name: OCR smoke test
+        entry: python test1.py
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

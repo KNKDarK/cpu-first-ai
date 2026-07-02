@@ -1,0 +1,10 @@
+models/
+tessdata/
+my/
+.mypy_cache/
+__pycache__/
+*.pyc
+.huggingface/
+
+builds/
+cache/

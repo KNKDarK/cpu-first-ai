@@ -1,0 +1,6 @@
+pillow
+pydantic
+pytesseract
+llama-cpp-python
+streamlit
+huggingface-hub
