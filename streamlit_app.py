@@ -151,15 +151,17 @@ with right:
     result = st.session_state.get("result")
 
     if uploaded is not None and not is_busy and st.button("🔍 Extract Text", width="stretch", type="primary"):
-        temp_path = Path(__file__).resolve().parent / "temp_uploaded_image.jpg"
+        app_dir = Path(__file__).resolve().parent
+        temp_path = app_dir / "temp_uploaded_image.jpg"
         with open(temp_path, "wb") as f:
             f.write(uploaded.getbuffer())
 
-        # Step 1: OCR
+        # Step 1: OCR — use absolute path so it works on Streamlit Cloud
         with st.spinner("Step 1/2: Running OCR on image..."):
             proc = subprocess.run(
-                [sys.executable, "ingestion.py", str(temp_path)],
+                [sys.executable, str(app_dir / "ingestion.py"), str(temp_path)],
                 capture_output=True, text=True,
+                cwd=str(app_dir),
             )
             raw_path = Path("/tmp/input.txt")
             raw_ocr_path = Path("/tmp/input_raw.txt")
@@ -171,20 +173,27 @@ with right:
             )
 
         if not corrected_text or corrected_text == "FAILED":
+            # Surface the actual subprocess error so we can debug on cloud
+            ocr_error_detail = ""
+            if proc.returncode != 0 and proc.stderr.strip():
+                ocr_error_detail = f"\n\nDebug info: {proc.stderr.strip()[:400]}"
+            elif proc.stderr.strip():
+                ocr_error_detail = f"\n\nDebug info: {proc.stderr.strip()[:400]}"
             st.session_state["result"] = {
                 "raw": None,
                 "corrected": None,
                 "refined": None,
                 "record_id": None,
-                "error": "OCR could not extract text from this image. Try a clearer image.",
+                "error": f"OCR could not extract text from this image. Try a clearer image.{ocr_error_detail}",
             }
             st.rerun()
 
-        # Step 2: LLM post-process
+        # Step 2: LLM post-process — use absolute path so it works on Streamlit Cloud
         with st.spinner("Step 2/2: Post-processing with AI..."):
             transform_proc = subprocess.run(
-                [sys.executable, "transformation.py"],
+                [sys.executable, str(app_dir / "transformation.py")],
                 capture_output=True, text=True,
+                cwd=str(app_dir),
             )
             out_path = Path("/tmp/output.json")
             refined_text = None
