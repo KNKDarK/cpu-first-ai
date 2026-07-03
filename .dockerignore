@@ -1,0 +1,15 @@
+my/
+__pycache__/
+.mypy_cache/
+.git/
+.gitignore
+builds/
+cache/
+.DS_Store
+*.jpg
+*.jpeg
+*.png
+models/
+tessdata/
+.github/
+debug_processed.jpg
