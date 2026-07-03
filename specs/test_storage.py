@@ -22,7 +22,7 @@ class TestStorageSpec(unittest.TestCase):
 
     def test_get_recent_extractions(self):
         source = (ROOT / "storage.py").read_text()
-        self.assertIn("get_recent_extractions", source)
+        self.assertIn("fetch_recent", source)
 
     def test_sqlite_used(self):
         source = (ROOT / "storage.py").read_text()

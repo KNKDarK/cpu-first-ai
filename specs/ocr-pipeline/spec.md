@@ -2,6 +2,7 @@
 type: spec
 module: ingestion
 status: active
+feature: ocr-pipeline
 ---
 
 # Spec: OCR Pipeline

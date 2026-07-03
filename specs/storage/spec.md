@@ -2,6 +2,7 @@
 type: spec
 module: storage
 status: active
+feature: storage
 ---
 
 # Spec: SQLite Storage
