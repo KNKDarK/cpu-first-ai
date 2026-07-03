@@ -1,19 +1,18 @@
+# Core runtime dependencies
 pillow
-pydantic
+numpy
 pytesseract
-llama-cpp-python
 streamlit
 huggingface-hub
 
-# Dev / CI
+# Optional: LLM post-processing (commented out so Streamlit Cloud doesn't crash during pip install)
+# llama-cpp-python
+
+# Dev / CI only
 ruff
 mypy
 bandit
-flake8
-pylint
-vulture
-semgrep
-pyupgrade
 pip-audit
 pytest
 pytest-cov
+pydantic
