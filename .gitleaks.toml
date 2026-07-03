@@ -1,0 +1,15 @@
+# Gitleaks configuration
+title = "Image Text Extractor - Secret Scan"
+extend = false
+
+[allowlist]
+description = "Allowlisted files and patterns"
+paths = [
+    "my/",
+    "__pycache__/",
+    ".mypy_cache/",
+    "builds/",
+    "cache/",
+    "models/",
+    ".git/",
+]

@@ -2,8 +2,14 @@ stages:
   - validate
   - lint
   - format
+  - flake8
+  - pylint
+  - pyupgrade
   - type-check
+  - vulture
   - secret-scan
+  - gitleaks
+  - semgrep
   - audit
   - test
   - smoke
@@ -47,17 +53,53 @@ format:
     - python -m pip install ruff
     - python -m ruff format . --check
 
+flake8:
+  stage: flake8
+  script:
+    - python -m pip install flake8
+    - python -m flake8 . --max-line-length=100 --exclude=my,__pycache__,.mypy_cache
+
+pylint:
+  stage: pylint
+  script:
+    - python -m pip install pylint pydantic
+    - python -m pylint *.py scripts/ specs/ --disable=C,R --max-line-length=100 --ignore=my
+
+pyupgrade:
+  stage: pyupgrade
+  script:
+    - python -m pip install pyupgrade
+    - python -m pyupgrade --py310-plus *.py scripts/ci/*.py specs/*.py
+
 type-check:
   stage: type-check
   script:
     - python -m pip install mypy
     - python -m mypy . --no-error-summary
 
+vulture:
+  stage: vulture
+  script:
+    - python -m pip install vulture
+    - python -m vulture . --min-confidence 80
+
 secret-scan:
   stage: secret-scan
   script:
     - python -m pip install bandit
     - python -m bandit -r . -c .bandit
+
+gitleaks:
+  stage: gitleaks
+  script:
+    - curl -fsSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar xz -C /usr/local/bin gitleaks
+    - gitleaks detect --source . --no-git -v
+
+semgrep:
+  stage: semgrep
+  script:
+    - python -m pip install semgrep
+    - python -m semgrep --config=auto --error .
 
 audit:
   stage: audit
@@ -78,7 +120,7 @@ test:
 
 ocr_smoke:
   stage: smoke
-  needs: ["validate", "lint", "format", "type-check", "secret-scan", "audit", "test"]
+  needs: ["validate", "lint", "format", "flake8", "pylint", "pyupgrade", "type-check", "vulture", "secret-scan", "gitleaks", "semgrep", "audit", "test"]
   tags:
     - local-ocr
   before_script:

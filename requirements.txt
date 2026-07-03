@@ -1,20 +1,19 @@
-# Core runtime dependencies
 pillow
-numpy
+pydantic
 pytesseract
+llama-cpp-python
 streamlit
 huggingface-hub
 
-# Optional: LLM post-processing (falls back gracefully if unavailable)
-llama-cpp-python
-
-# Dev / CI only
+# Dev / CI
 ruff
 mypy
 bandit
+flake8
+pylint
+vulture
+semgrep
+pyupgrade
 pip-audit
 pytest
 pytest-cov
-
-# gitleaks (install separately: https://github.com/gitleaks/gitleaks/releases)
-pydantic
