@@ -63,6 +63,11 @@ test:
   script:
     - python -m pip install pytest pytest-cov
     - bash scripts/ci/run_tests.sh
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 ocr_smoke:
   stage: smoke

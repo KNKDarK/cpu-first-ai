@@ -33,5 +33,9 @@ norecursedirs = ["my", "builds", ".mypy_cache", "__pycache__"]
 source = ["."]
 omit = ["my/*", "builds/*", "__pycache__/*", ".mypy_cache/*"]
 
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
 [tool.pip-audit]
 strict = true

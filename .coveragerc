@@ -1,0 +1,14 @@
+[run]
+source = .
+omit = my/*,builds/*,__pycache__/*,.mypy_cache/*
+
+[report]
+show_missing = true
+skip_covered = false
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+
+[xml]
+output = coverage.xml
