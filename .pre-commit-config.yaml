@@ -1,64 +1,64 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.4
+    hooks:
+      - id: ruff
+        name: Lint
+        args: [--fix]
+        stages: [pre-commit, pre-push]
+      - id: ruff-format
+        name: Format
+        stages: [pre-commit, pre-push]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        name: Type Check
+        args: [--no-error-summary, --ignore-missing-imports]
+        stages: [pre-push]
+        additional_dependencies: [pydantic]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        name: Security
+        args: [-r, ., -c, pyproject.toml]
+        stages: [pre-commit, pre-push]
+
   - repo: local
     hooks:
       - id: python-compile
-        name: Python syntax check
+        name: Quality - Syntax Check
         entry: python scripts/ci/compile_python.py
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]
 
       - id: forbid-cloud-clients
-        name: Block forbidden cloud client libraries
+        name: Quality - No Cloud APIs
         entry: python scripts/ci/forbid_cloud_clients.py
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]
 
       - id: storage-contract
-        name: Storage JSON/Pydantic contract
+        name: Quality - Storage Contract
         entry: python scripts/ci/test_storage_contract.py
         language: system
         pass_filenames: false
         stages: [pre-commit, pre-push]
 
-      - id: lint-ruff
-        name: Lint with ruff
-        entry: bash scripts/ci/lint.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-commit, pre-push]
-
-      - id: type-check
-        name: Type check with mypy
-        entry: bash scripts/ci/type_check.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
-
-      - id: secret-scan
-        name: Secret scanning with detect-secrets
-        entry: bash scripts/ci/secret_scan.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-commit, pre-push]
-
-      - id: dependency-audit
-        name: Dependency audit with pip-audit
-        entry: bash scripts/ci/audit.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
-
       - id: test-with-coverage
-        name: Run tests with coverage
-        entry: bash scripts/ci/run_tests.sh
+        name: Quality - Tests with Coverage
+        entry: python -m pytest specs/ -v --cov=. --cov-report=term
         language: system
         pass_filenames: false
         stages: [pre-push]
 
       - id: ocr-smoke
-        name: OCR smoke test
+        name: Quality - OCR Smoke Test
         entry: python test1.py
         language: system
         pass_filenames: false

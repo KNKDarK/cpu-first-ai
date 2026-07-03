@@ -8,7 +8,7 @@ huggingface-hub
 # Dev / CI
 ruff
 mypy
-detect-secrets
+bandit
 pip-audit
 pytest
 pytest-cov

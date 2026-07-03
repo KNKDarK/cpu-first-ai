@@ -1,6 +1,7 @@
 stages:
   - validate
   - lint
+  - format
   - type-check
   - secret-scan
   - audit
@@ -38,31 +39,37 @@ lint:
   stage: lint
   script:
     - python -m pip install ruff
-    - bash scripts/ci/lint.sh
+    - python -m ruff check .
+
+format:
+  stage: format
+  script:
+    - python -m pip install ruff
+    - python -m ruff format . --check
 
 type-check:
   stage: type-check
   script:
     - python -m pip install mypy
-    - bash scripts/ci/type_check.sh
+    - python -m mypy . --no-error-summary
 
 secret-scan:
   stage: secret-scan
   script:
-    - python -m pip install detect-secrets
-    - bash scripts/ci/secret_scan.sh
+    - python -m pip install bandit
+    - python -m bandit -r . -c pyproject.toml
 
 audit:
   stage: audit
   script:
     - python -m pip install pip-audit
-    - bash scripts/ci/audit.sh
+    - python -m pip_audit --strict -r requirements.txt
 
 test:
   stage: test
   script:
     - python -m pip install pytest pytest-cov
-    - bash scripts/ci/run_tests.sh
+    - python -m pytest specs/ -v --cov=. --cov-report=xml:coverage.xml
   artifacts:
     reports:
       coverage_report:
@@ -71,7 +78,7 @@ test:
 
 ocr_smoke:
   stage: smoke
-  needs: ["validate", "lint", "type-check", "secret-scan", "audit", "test"]
+  needs: ["validate", "lint", "format", "type-check", "secret-scan", "audit", "test"]
   tags:
     - local-ocr
   before_script:
