@@ -188,7 +188,7 @@ with right:
             }
             st.rerun()
 
-        # Step 2: LLM post-process — use absolute path so it works on Streamlit Cloud
+        # Step 2: LLM post-process (optional) — falls back to corrected OCR if unavailable
         with st.spinner("Step 2/2: Post-processing with AI..."):
             transform_proc = subprocess.run(
                 [sys.executable, str(app_dir / "transformation.py")],
@@ -202,7 +202,7 @@ with right:
                 try:
                     data = json.loads(out_path.read_text(encoding="utf-8"))
                     if data.get("status") != "error":
-                        refined_text = data.get("cleaned_text", "")
+                        refined_text = data.get("cleaned_text") or corrected_text
                         record_id = persist_output(
                             source_image=uploaded.name,
                             raw_text=raw_ocr_text,
@@ -213,20 +213,21 @@ with right:
                 except Exception:
                     pass
 
+        # Always fall back to corrected OCR — never block on LLM failures
+        if not refined_text:
+            refined_text = corrected_text
+
         temp_path.unlink(missing_ok=True)
         for p in [raw_path, raw_ocr_path, out_path]:
             p.unlink(missing_ok=True)
 
-        error = None
-        if transform_proc.returncode != 0:
-            error = "AI refinement failed. Showing corrected OCR instead."
-
+        # Never surface an error when we have text to show
         st.session_state["result"] = {
             "raw": raw_ocr_text,
             "corrected": corrected_text,
             "refined": refined_text,
             "record_id": record_id,
-            "error": error,
+            "error": None,
         }
         st.rerun()
 
@@ -243,11 +244,8 @@ with right:
             </div>""", unsafe_allow_html=True)
 
     elif result.get("error"):
-        if result.get("raw") or result.get("corrected"):
-            st.warning(result["error"])
-            st.code(result.get("corrected") or result.get("raw"), language="text")
-        else:
-            st.error(result["error"])
+        # Only show a hard error when OCR itself failed (no text at all)
+        st.error(result["error"])
         if st.button("🔄 Try Again", width="stretch"):
             st.session_state.pop("result", None)
             st.rerun()
