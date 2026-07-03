@@ -22,6 +22,41 @@ repos:
         pass_filenames: false
         stages: [pre-commit, pre-push]
 
+      - id: lint-ruff
+        name: Lint with ruff
+        entry: bash scripts/ci/lint.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
+      - id: type-check
+        name: Type check with mypy
+        entry: bash scripts/ci/type_check.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: secret-scan
+        name: Secret scanning with detect-secrets
+        entry: bash scripts/ci/secret_scan.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+
+      - id: dependency-audit
+        name: Dependency audit with pip-audit
+        entry: bash scripts/ci/audit.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: test-with-coverage
+        name: Run tests with coverage
+        entry: bash scripts/ci/run_tests.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
       - id: ocr-smoke
         name: OCR smoke test
         entry: python test1.py

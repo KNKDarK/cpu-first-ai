@@ -1,0 +1,37 @@
+[project]
+name = "image-text-extractor"
+version = "1.0.0"
+description = "Offline OCR text extraction from images using Tesseract and local Llama post-processing"
+requires-python = ">=3.10"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_unused_ignores = true
+exclude = ["my/", "builds/", ".mypy_cache/"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=. --cov-report=term-missing --cov-report=xml"
+testpaths = ["specs", "."]
+python_files = ["*_test.py", "*_spec.py", "test_*.py"]
+norecursedirs = ["my", "builds", ".mypy_cache", "__pycache__"]
+
+[tool.coverage.run]
+source = ["."]
+omit = ["my/*", "builds/*", "__pycache__/*", ".mypy_cache/*"]
+
+[tool.pip-audit]
+strict = true

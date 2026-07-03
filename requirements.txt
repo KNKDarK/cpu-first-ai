@@ -4,3 +4,11 @@ pytesseract
 llama-cpp-python
 streamlit
 huggingface-hub
+
+# Dev / CI
+ruff
+mypy
+detect-secrets
+pip-audit
+pytest
+pytest-cov

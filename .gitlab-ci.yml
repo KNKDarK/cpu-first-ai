@@ -1,5 +1,10 @@
 stages:
   - validate
+  - lint
+  - type-check
+  - secret-scan
+  - audit
+  - test
   - smoke
 
 variables:
@@ -19,6 +24,7 @@ default:
   before_script:
     - python --version
     - python -m pip install --upgrade pip
+    - python -m pip install -r requirements.txt
 
 validate:
   stage: validate
@@ -28,9 +34,39 @@ validate:
     - python scripts/ci/forbid_cloud_clients.py
     - python scripts/ci/test_storage_contract.py
 
+lint:
+  stage: lint
+  script:
+    - python -m pip install ruff
+    - bash scripts/ci/lint.sh
+
+type-check:
+  stage: type-check
+  script:
+    - python -m pip install mypy
+    - bash scripts/ci/type_check.sh
+
+secret-scan:
+  stage: secret-scan
+  script:
+    - python -m pip install detect-secrets
+    - bash scripts/ci/secret_scan.sh
+
+audit:
+  stage: audit
+  script:
+    - python -m pip install pip-audit
+    - bash scripts/ci/audit.sh
+
+test:
+  stage: test
+  script:
+    - python -m pip install pytest pytest-cov
+    - bash scripts/ci/run_tests.sh
+
 ocr_smoke:
   stage: smoke
-  needs: ["validate"]
+  needs: ["validate", "lint", "type-check", "secret-scan", "audit", "test"]
   tags:
     - local-ocr
   before_script:
