@@ -57,7 +57,7 @@ secret-scan:
   stage: secret-scan
   script:
     - python -m pip install bandit
-    - python -m bandit -r . -c pyproject.toml
+    - python -m bandit -r . -c .bandit
 
 audit:
   stage: audit

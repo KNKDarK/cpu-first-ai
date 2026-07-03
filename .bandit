@@ -1,0 +1,3 @@
+[bandit]
+exclude: my,builds,.mypy_cache,__pycache__,.git,.github,cache
+skips: B101,B108,B110,B404,B603

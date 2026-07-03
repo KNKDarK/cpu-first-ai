@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: bandit
         name: Security
-        args: [-r, ., -c, pyproject.toml]
+        args: [-r, ., -c, .bandit]
         stages: [pre-commit, pre-push]
 
   - repo: local

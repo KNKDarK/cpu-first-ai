@@ -1,3 +1,9 @@
+---
+type: spec
+module: storage
+status: active
+---
+
 # Spec: SQLite Storage
 
 ## Summary

@@ -1,3 +1,9 @@
+---
+type: spec
+module: ingestion
+status: active
+---
+
 # Spec: OCR Pipeline
 
 ## Summary

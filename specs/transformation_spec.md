@@ -1,3 +1,9 @@
+---
+type: spec
+module: transformation
+status: active
+---
+
 # Spec: LLM Transformation
 
 ## Summary
